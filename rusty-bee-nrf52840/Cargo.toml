@@ -1,0 +1,13 @@
+[package]
+name = "rusty-bee-nrf52840"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+rusty-bee = { path = "../rusty-bee" }
+
+[build-dependencies]
+cbindgen = "0.24.3"

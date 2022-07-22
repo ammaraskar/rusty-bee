@@ -1,13 +1,6 @@
-[package]
-authors = ["Ammar Askar <ammar@ammaraskar.com>"]
-name = "rusty-bee"
-version = "0.1.0"
-edition = "2021"
+[workspace]
 
-[lib]
-crate-type = ["staticlib"]
-
-[dependencies]
-
-[build-dependencies]
-cbindgen = "0.24.3"
+members = [
+    "rusty-bee",
+    "rusty-bee-nrf52840"
+]

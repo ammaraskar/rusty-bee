@@ -1,0 +1,7 @@
+[package]
+authors = ["Ammar Askar <ammar@ammaraskar.com>"]
+name = "rusty-bee"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]

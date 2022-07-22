@@ -14,3 +14,10 @@ where it goes :)
 ## Testing
 
 1. `cargo test`
+
+## Directory Structure
+
+* `rusty-bee` - The core, platform independent library
+
+* `rusty-bee-nrf52840` - Implementation of the library for the NRF52840 SoC,
+  written as a C library for now to work with the adafruit Android toolchain.
