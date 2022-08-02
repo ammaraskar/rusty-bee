@@ -8,6 +8,8 @@ crate-type = ["staticlib"]
 
 [dependencies]
 volatile-register = "0.2.1"
+byte = "0.2.6"
+ieee802154 = "0.6"
 rusty-bee = { path = "../rusty-bee" }
 
 [build-dependencies]

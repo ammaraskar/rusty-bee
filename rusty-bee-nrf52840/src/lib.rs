@@ -30,6 +30,11 @@ pub extern "C" fn zigbee_init() -> u64 {
     }
 
     let radio = IEEE802154Driver::new();
+
+    for _ in 1..3 {
+        serial_println!("Packet: {:?}", radio.read_packet());
+    }
+
     return radio.mac_address;
     //return 0;
 }

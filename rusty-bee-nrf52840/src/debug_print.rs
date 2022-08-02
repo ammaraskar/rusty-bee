@@ -15,9 +15,7 @@ impl ExternSerialWriter {
 #[cfg(not(test))]
 impl core::fmt::Write for ExternSerialWriter {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        unsafe {
-            write_string_from_rust(s.as_bytes().as_ptr(), s.as_bytes().len())
-        }
+        unsafe { write_string_from_rust(s.as_bytes().as_ptr(), s.as_bytes().len()) }
         Ok(())
     }
 }
@@ -30,7 +28,6 @@ impl core::fmt::Write for ExternSerialWriter {
     }
 }
 
-
 // Debugging printing.
 #[macro_export]
 macro_rules! serial_print {
@@ -39,6 +36,18 @@ macro_rules! serial_print {
         {
             let mut stm = $crate::debug_print::ExternSerialWriter{};
             stm.write_fmt(core::format_args!($($arg)*));
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! serial_println {
+    ($($arg:tt)*) => {
+        #[allow(unused_must_use)]
+        {
+            let mut stm = $crate::debug_print::ExternSerialWriter{};
+            stm.write_fmt(core::format_args!($($arg)*));
+            stm.write_fmt(core::format_args!("\n"));
         }
     };
 }
