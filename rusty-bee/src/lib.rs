@@ -1,5 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 
+pub mod network_layer;
+
 /// Initialize the Zigbee stack for specific hardware.
 pub fn initialize_zigbee_stack<T: ZigbeeHardware>(hardware: &T) -> bool {
     hardware.connect()
