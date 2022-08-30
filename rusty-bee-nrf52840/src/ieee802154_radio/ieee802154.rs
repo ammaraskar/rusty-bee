@@ -52,7 +52,9 @@ impl IEEE802154Driver {
         // Slice the packet to the proper length.
         let packet_bytes = &packet_bytes[1..(length as usize)];
 
-        Frame::try_read(packet_bytes, FooterMode::Explicit)
+        // Read the frame from the packet bytes, no footer since we are using
+        // the in-built CRC checking of the radio.
+        Frame::try_read(packet_bytes, FooterMode::None)
     }
 }
 

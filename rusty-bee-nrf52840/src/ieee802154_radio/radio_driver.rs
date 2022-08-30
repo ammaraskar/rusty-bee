@@ -1,12 +1,13 @@
 use crate::{serial_print, serial_println};
 
+#[allow(dead_code)]
 pub struct RadioDriver {
-    tasks: &'static mut RadioPeripheralTasks,
-    events: &'static mut RadioPeripheralEvents,
-    shortcuts: &'static mut RadioPeripheralShortcuts,
-    received_packet_details: &'static mut RadioPeripheralReceivedPacketDetails,
-    config_and_state: &'static mut RadioPeripheralConfigurationAndState,
-    power: &'static mut RadioPeripheralPower,
+    pub tasks: &'static mut RadioPeripheralTasks,
+    pub events: &'static mut RadioPeripheralEvents,
+    pub shortcuts: &'static mut RadioPeripheralShortcuts,
+    pub received_packet_details: &'static mut RadioPeripheralReceivedPacketDetails,
+    pub config_and_state: &'static mut RadioPeripheralConfigurationAndState,
+    pub power: &'static mut RadioPeripheralPower,
 }
 
 static mut PACKET_BUFFER: [u8; 512] = [0; 512];
@@ -135,15 +136,21 @@ impl RadioDriver {
         // Wait until we're back to RxIdle state
         while self.config_and_state.radio_state.read() != config_types::RadioState::RxIdle {}
 
-        serial_println!("PAYLOAD event: {}", self.events.events_payload.read());
         unsafe {
             serial_println!("Packet length: {}", PACKET_BUFFER[0] as u32);
-            serial_println!("{:X?}", &PACKET_BUFFER[0..20]);
         }
         serial_println!(
             "CRC matched: {:?}",
             self.received_packet_details.crc_status.read()
         );
+        unsafe {
+            serial_print!(" < ");
+            // Print out the raw hex dump of the packet.
+            for i in 0..(PACKET_BUFFER[0] as usize) {
+                serial_print!("{:02x}", PACKET_BUFFER[i + 1]);
+            }
+            serial_println!("");
+        }
 
         serial_println!("Might have finished reading??");
         // ======= Try to receive a packet??? =======
@@ -156,8 +163,9 @@ impl RadioDriver {
 const RADIO_BASE_ADDRESS: usize = 0x40001000;
 
 const RADIO_TASKS_OFFSET: usize = RADIO_BASE_ADDRESS + 0x0;
+#[allow(dead_code)]
 #[repr(C)]
-struct RadioPeripheralTasks {
+pub struct RadioPeripheralTasks {
     /// TASK_TXEN in Nordic's datasheet.
     trigger_tx_enable: volatile_register::WO<u32>,
     /// TASK_RXEN in Nordic's datasheet.
@@ -191,7 +199,7 @@ struct RadioPeripheralTasks {
 
 const RADIO_EVENTS_OFFST: usize = RADIO_BASE_ADDRESS + 0x100;
 #[repr(C)]
-struct RadioPeripheralEvents {
+pub struct RadioPeripheralEvents {
     /// 1 if RADIO has ramped up and is ready to be started.
     ///
     /// EVENTS_READY in Nordic's datasheet.
@@ -212,13 +220,15 @@ struct RadioPeripheralEvents {
 
 const RADIO_SHORTCUTS_OFFSET: usize = RADIO_BASE_ADDRESS + 0x200;
 #[repr(C)]
-struct RadioPeripheralShortcuts {
+pub struct RadioPeripheralShortcuts {
     /// SHORTS in Nordic's datasheet.
     shortcuts: volatile_register::RW<u32>,
 }
 
 const RADIO_RECEIVED_PACKET_DETAILS_OFFSET: usize = RADIO_BASE_ADDRESS + 0x400;
-struct RadioPeripheralReceivedPacketDetails {
+#[allow(dead_code)]
+#[repr(C)]
+pub struct RadioPeripheralReceivedPacketDetails {
     /// CRCSTATUS in Nordic's datasheet.
     crc_status: volatile_register::RO<CrcStatus>,
     /// RXMATCH in Nordic's datasheet.
@@ -231,6 +241,7 @@ struct RadioPeripheralReceivedPacketDetails {
     pdu_stat: volatile_register::RO<u32>,
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 #[repr(u32)]
 enum CrcStatus {
@@ -239,7 +250,7 @@ enum CrcStatus {
 }
 
 pub mod config_types {
-
+    #[allow(dead_code)]
     #[derive(Clone, Copy, Debug)]
     #[repr(u8)]
     pub enum PacketPreambleType {
@@ -357,6 +368,7 @@ pub mod config_types {
     }
 
     /// Values for the output power of the RADIO in decibel-milliwatts.
+    #[allow(dead_code)]
     #[derive(Copy, Clone)]
     #[repr(u32)]
     pub enum TransmissionPower {
@@ -393,6 +405,7 @@ pub mod config_types {
     }
 
     /// Values for the data rate and modulation mode of the RADIO.
+    #[allow(dead_code)]
     #[derive(Copy, Clone, Debug)]
     #[repr(u32)]
     pub enum RadioMode {
@@ -413,6 +426,7 @@ pub mod config_types {
     }
 
     /// Values for the state of the RADIO.
+    #[allow(dead_code)]
     #[derive(Copy, Clone, Debug, PartialEq)]
     #[repr(u32)]
     pub enum RadioState {
@@ -438,7 +452,7 @@ pub mod config_types {
 
 const RADIO_CONFIG_AND_STATE_OFFSET: usize = RADIO_BASE_ADDRESS + 0x504;
 #[repr(C)]
-struct RadioPeripheralConfigurationAndState {
+pub struct RadioPeripheralConfigurationAndState {
     /// Memory address of where the RADIO will use DMA to put the received
     /// packet or read the packet to transmit.
     ///
@@ -495,7 +509,7 @@ struct RadioPeripheralConfigurationAndState {
 
 const RADIO_POWER_OFFSET: usize = RADIO_BASE_ADDRESS + 0xFFC;
 #[repr(C)]
-struct RadioPeripheralPower {
+pub struct RadioPeripheralPower {
     /// POWER in Nordic's datasheet.
     power: volatile_register::RW<u32>,
 }
