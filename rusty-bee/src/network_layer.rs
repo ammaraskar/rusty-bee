@@ -21,6 +21,7 @@ impl From<TryFromSliceError> for ParseError {
     }
 }
 
+#[derive(Debug)]
 pub struct ZigbeePacket<'a> {
     pub frame_control_field: FrameControlField,
     pub destination: u16,
@@ -97,6 +98,7 @@ impl<'a> ZigbeePacket<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct FrameControlField {
     pub frame_type: FrameType,
     pub protocol_version: u8,

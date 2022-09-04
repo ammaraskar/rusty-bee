@@ -4,6 +4,9 @@ use rusty_bee::ZigbeeHardware;
 
 mod ieee802154_radio;
 use ieee802154_radio::IEEE802154Driver;
+use rusty_bee::network_layer::ZigbeePacket;
+
+pub mod factory_information;
 
 #[macro_use]
 pub mod debug_print;
@@ -23,15 +26,30 @@ impl ZigbeeHardware for NRF52840ZigbeeHardware {
 }
 
 #[no_mangle]
-pub extern "C" fn zigbee_init() -> u64 {
+pub extern "C" fn zigbee_init(num_reads: u32, param: u32) -> u64 {
     let hardware = NRF52840ZigbeeHardware::new();
     if !initialize_zigbee_stack(&hardware) {
         return 1;
     }
 
-    let radio = IEEE802154Driver::new();
+    let mut radio = IEEE802154Driver::new();
 
-    serial_println!("Packet: {:?}", radio.read_packet());
+    if param == 1 {
+        radio.broadcast_beacon();
+    }
+
+    for _ in 0..num_reads {
+        let packet = radio.read_packet();
+        serial_println!("Packet: {:?}", packet);
+
+        match packet {
+            Ok((frame, _size)) => {
+                let zigbee = ZigbeePacket::try_parse_from(frame.payload);
+                serial_println!("Zigbee: {:?}", zigbee);
+            }
+            _ => {}
+        }
+    }
 
     return radio.mac_address;
     //return 0;

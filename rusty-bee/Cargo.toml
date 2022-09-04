@@ -6,3 +6,4 @@ edition = "2021"
 
 [dependencies]
 byte = "0.2.6"
+ccm = { version = "0.5.0", default-features = false}
