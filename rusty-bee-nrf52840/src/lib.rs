@@ -38,7 +38,23 @@ pub extern "C" fn zigbee_init(num_reads: u32, param: u32) -> u64 {
         radio.broadcast_beacon();
     }
 
-    for _ in 0..num_reads {
+    for _ in 0..(num_reads / 2) {
+        let packet = radio.read_packet();
+        serial_println!("Packet: {:?}", packet);
+
+        match packet {
+            Ok((frame, _size)) => {
+                let zigbee = ZigbeePacket::try_parse_from(frame.payload);
+                serial_println!("Zigbee: {:?}", zigbee);
+            }
+            _ => {}
+        }
+    }
+
+    if param == 1 {
+        radio.send_assosciation_request();
+    }
+    for _ in 0..(num_reads / 2) {
         let packet = radio.read_packet();
         serial_println!("Packet: {:?}", packet);
 

@@ -76,14 +76,21 @@ impl RadioDriver {
         }
     }
 
-    pub fn set_crc_configuration(&mut self, length: u32, ieee_mode: bool, polynomial: u32) -> Result<(), ()> {
+    pub fn set_crc_configuration(
+        &mut self,
+        length: u32,
+        ieee_mode: bool,
+        polynomial: u32,
+    ) -> Result<(), ()> {
         if length > 3 {
-            return Err(())
+            return Err(());
         }
 
         let crc_configuration = (length & 0b11) | (((ieee_mode as u32) & 1) << 9);
         unsafe {
-            self.config_and_state.crc_configuration.write(crc_configuration);
+            self.config_and_state
+                .crc_configuration
+                .write(crc_configuration);
             self.config_and_state.crc_polynomial.write(polynomial);
             self.config_and_state.crc_initial_value.write(0);
         }
@@ -115,45 +122,29 @@ impl RadioDriver {
         return Ok(());
     }
 
-    pub fn read_packet_blocking(&self) -> &[u8] {
+    pub fn read_packet_blocking(&mut self) -> &'static [u8] {
         // Disable all shortcuts.
         unsafe {
             self.shortcuts.shortcuts.write(0);
         }
         // Trigger the RXEN task if needed.
         if self.config_and_state.radio_state.read() != config_types::RadioState::RxIdle {
+            self.disable_radio();
             unsafe {
                 self.tasks.trigger_rx_enable.write(1);
             }
         }
 
-        serial_println!(
-            "Current radio state is: {:?}",
-            self.config_and_state.radio_state.read()
-        );
-
         // Wait until we're in RxIdle state
         while self.config_and_state.radio_state.read() != config_types::RadioState::RxIdle {}
-        serial_println!(
-            "Current radio state is: {:?}",
-            self.config_and_state.radio_state.read()
-        );
 
         // Trigger the START task.
         unsafe {
             self.tasks.trigger_radio_start.write(1);
         }
-        serial_println!("Start task triggered");
-        for _ in 0..100 {
-            serial_print!("{:?} ", self.config_and_state.radio_state.read());
-        }
-        serial_println!("");
         // Wait until we're back to RxIdle state
         while self.config_and_state.radio_state.read() != config_types::RadioState::RxIdle {}
 
-        unsafe {
-            serial_println!("Packet length: {}", PACKET_BUFFER[0] as u32);
-        }
         serial_println!(
             "CRC matched: {:?}",
             self.received_packet_details.crc_status.read()
@@ -167,7 +158,6 @@ impl RadioDriver {
             serial_println!("");
         }
 
-        serial_println!("Might have finished reading??");
         // ======= Try to receive a packet??? =======
         unsafe {
             return &PACKET_BUFFER;
@@ -190,7 +180,6 @@ impl RadioDriver {
         // Wait until we're in RxIdle state
         while self.config_and_state.radio_state.read() != config_types::RadioState::TxIdle {}
 
-        serial_println!("Copying packet payload to buffer");
         // Copy the length of the packet as a u8 to the first byte.
         unsafe {
             PACKET_BUFFER[0] = length;
@@ -205,7 +194,7 @@ impl RadioDriver {
             for i in 0..(PACKET_BUFFER[0] as usize) {
                 serial_print!("{:02x}", PACKET_BUFFER[i + 1]);
             }
-            serial_println!("0000");
+            serial_println!("");
         }
 
         // Trigger the START task.
@@ -215,8 +204,6 @@ impl RadioDriver {
         // Wait until we're back to TxIdle state
         while self.config_and_state.radio_state.read() != config_types::RadioState::TxIdle {}
         self.disable_radio();
-
-        serial_println!("Finished writing!");
     }
 
     pub fn disable_radio(&self) {
